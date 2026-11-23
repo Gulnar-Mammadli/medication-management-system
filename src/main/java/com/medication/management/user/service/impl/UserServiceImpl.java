@@ -3,9 +3,9 @@ package com.medication.management.user.service.impl;
 import com.medication.management.user.dto.request.UserRequestDto;
 import com.medication.management.user.dto.response.UserResponseDto;
 import com.medication.management.user.entity.User;
+import com.medication.management.user.exception.UserAlreadyExistsException;
 import com.medication.management.user.repository.UserRepository;
 import com.medication.management.user.service.UserService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,9 +20,9 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
             String timezone
     ) {
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException(
+            throw new UserAlreadyExistsException(
                     "User with this email already exists"
             );
         }
@@ -65,7 +65,7 @@ public class UserServiceImpl implements UserService {
                 .toLowerCase(Locale.ROOT);
 
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new IllegalArgumentException(
+            throw new UserAlreadyExistsException(
                     "User with this email already exists"
             );
         }
