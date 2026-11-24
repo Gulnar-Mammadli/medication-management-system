@@ -41,10 +41,10 @@ A RESTful API built with **Spring Boot** for managing users and medication-relat
 
 Base URL: `/api/v1/auth`
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/login` | Authenticate user |
-| POST | `/logout` | Revoke current JWT |
+| Method | Endpoint  | Description        |
+|--------|-----------|--------------------|
+| POST   | `/login`  | Authenticate user  |
+| POST   | `/logout` | Revoke current JWT |
 
 ### Login
 
@@ -89,21 +89,21 @@ Expired revoked tokens are automatically removed by a scheduled cleanup task.
 
 Base URL: `/api/v1/users`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| POST | `/register` | Register a new user | Public |
-| GET | `/` | Retrieve all users | Admin |
-| GET | `/{id}` | Retrieve user by ID | Admin |
-| GET | `/me` | Retrieve current user | Authenticated |
-| DELETE | `/{id}` | Delete user | Admin |
+| Method | Endpoint    | Description           | Access        |
+|--------|-------------|-----------------------|---------------|
+| POST   | `/register` | Register a new user   | Public        |
+| GET    | `/`         | Retrieve all users    | Admin         |
+| GET    | `/{id}`     | Retrieve user by ID   | Admin         |
+| GET    | `/me`       | Retrieve current user | Authenticated |
+| DELETE | `/{id}`     | Delete user           | Admin         |
 
 ## Role-Based Authorization
 
 The application supports two roles:
 
-| Role | Permissions |
-|---|---|
-| `ROLE_USER` | Access authorized user endpoints |
+| Role         | Permissions                                      |
+|--------------|--------------------------------------------------|
+| `ROLE_USER`  | Access authorized user endpoints                 |
 | `ROLE_ADMIN` | Access administrative endpoints and manage users |
 
 The application enforces the last administrator protection rule. An administrator cannot be deleted if they are the only remaining administrator.
