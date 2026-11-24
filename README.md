@@ -1,7 +1,7 @@
 
 # Medication Management System
 
-A RESTful API built with **Spring Boot** for managing users and medication-related data. The application provides JWT-based authentication, role-based authorization, and secure user management.
+A RESTful API built with **Spring Boot** for managing users and medication-related data. The application provides JWT-based authentication, role-based authorization, secure user management, and personal medication tracking.
 
 ## Tech Stack
 
@@ -37,14 +37,30 @@ A RESTful API built with **Spring Boot** for managing users and medication-relat
 - Delete users
 - Prevent deletion of the last administrator
 
+### Personal Medication Management
+
+- Create personal medication records
+- Retrieve all medications belonging to the authenticated user
+- Retrieve a medication by ID
+- Update medication details
+- Delete personal medications
+- Manage medication status
+- Filter medications by status
+- Paginated medication retrieval
+- Sort medication records by supported fields
+- Validate medication start and end dates
+- Enforce user ownership of medication records
+
+Each personal medication belongs to an authenticated user. Users can only access and manage their own medication records.
+
 ## Authentication API
 
 Base URL: `/api/v1/auth`
 
-| Method | Endpoint  | Description        |
-|--------|-----------|--------------------|
-| POST   | `/login`  | Authenticate user  |
-| POST   | `/logout` | Revoke current JWT |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/login` | Authenticate user |
+| POST | `/logout` | Revoke current JWT |
 
 ### Login
 
@@ -89,21 +105,114 @@ Expired revoked tokens are automatically removed by a scheduled cleanup task.
 
 Base URL: `/api/v1/users`
 
-| Method | Endpoint    | Description           | Access        |
-|--------|-------------|-----------------------|---------------|
-| POST   | `/register` | Register a new user   | Public        |
-| GET    | `/`         | Retrieve all users    | Admin         |
-| GET    | `/{id}`     | Retrieve user by ID   | Admin         |
-| GET    | `/me`       | Retrieve current user | Authenticated |
-| DELETE | `/{id}`     | Delete user           | Admin         |
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| POST | `/register` | Register a new user | Public |
+| GET | `/` | Retrieve all users | Admin |
+| GET | `/{id}` | Retrieve user by ID | Admin |
+| GET | `/me` | Retrieve current user | Authenticated |
+| DELETE | `/{id}` | Delete user | Admin |
+
+## Personal Medication API
+
+Base URL: `/api/v1/medications`
+
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| POST | `/` | Create personal medication | Authenticated |
+| GET | `/` | Retrieve personal medications | Authenticated |
+| GET | `/{id}` | Retrieve medication by ID | Authenticated |
+| PUT | `/{id}` | Update medication | Authenticated |
+| DELETE | `/{id}` | Delete medication | Authenticated |
+
+### Medication Status
+
+Personal medications support the following statuses:
+
+| Status | Description |
+|--------|-------------|
+| `ACTIVE` | Medication is currently being taken |
+| `COMPLETED` | Medication course has been completed |
+| `DISCONTINUED` | Medication has been stopped |
+
+### Pagination, Sorting, and Filtering
+
+The medication listing endpoint supports pagination, sorting, and optional status filtering.
+
+**Retrieve all medications:**
+
+```http
+GET /api/v1/medications
+```
+
+**Retrieve active medications:**
+
+```http
+GET /api/v1/medications?status=ACTIVE
+```
+
+**Retrieve completed medications:**
+
+```http
+GET /api/v1/medications?status=COMPLETED
+```
+
+**Retrieve medications with pagination:**
+
+```http
+GET /api/v1/medications?page=0&size=10
+```
+
+**Sort medications by name:**
+
+```http
+GET /api/v1/medications?sort=name,asc
+```
+
+**Combine filtering, pagination, and sorting:**
+
+```http
+GET /api/v1/medications?status=ACTIVE&page=0&size=10&sort=createdAt,desc
+```
+
+Pagination parameters:
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `page` | Zero-based page number | `0` |
+| `size` | Number of records per page | `10` |
+| `sort` | Sorting property and direction | `createdAt,desc` |
+| `status` | Optional medication status filter | No filter |
+
+The maximum page size is configured to 100 records.
+
+Supported sorting fields:
+
+- `name`
+- `startDate`
+- `endDate`
+- `createdAt`
+- `updatedAt`
+
+The API returns pagination metadata, including total elements, total pages, current page number, and page size.
+
+### Medication Ownership
+
+Personal medication records are associated with users through a many-to-one relationship.
+
+- Each medication belongs to one user.
+- A user can have multiple personal medications.
+- Users cannot retrieve another user's medication.
+- Users cannot update or delete another user's medication.
+- Deleting a user also deletes their associated personal medications through database-level cascading deletion.
 
 ## Role-Based Authorization
 
 The application supports two roles:
 
-| Role         | Permissions                                      |
-|--------------|--------------------------------------------------|
-| `ROLE_USER`  | Access authorized user endpoints                 |
+| Role | Permissions |
+|------|-------------|
+| `ROLE_USER` | Access authorized user endpoints and manage personal medications |
 | `ROLE_ADMIN` | Access administrative endpoints and manage users |
 
 The application enforces the last administrator protection rule. An administrator cannot be deleted if they are the only remaining administrator.
@@ -143,6 +252,14 @@ src/
 │   │   ├── common/
 │   │   │   └── exception/
 │   │   ├── config/
+│   │   ├── medication/
+│   │   │   ├── controller/
+│   │   │   ├── dto/
+│   │   │   ├── entity/
+│   │   │   ├── enums/
+│   │   │   ├── exception/
+│   │   │   ├── repository/
+│   │   │   └── service/
 │   │   └── user/
 │   │       ├── controller/
 │   │       ├── dto/
@@ -170,9 +287,12 @@ Example migration files:
 V1__create_users_table.sql
 V2__add_user_roles.sql
 V3__create_revoked_tokens_table.sql
+V4__create_personal_medications_table.sql
 ```
 
 Flyway automatically executes pending migrations when the application starts.
+
+Database schema changes are managed through versioned migration scripts rather than relying on Hibernate schema generation.
 
 ## Configuration
 
@@ -193,6 +313,11 @@ spring:
 
   flyway:
     enabled: true
+
+  data:
+    web:
+      pageable:
+        max-page-size: 100
 
 jwt:
   secret: ${JWT_SECRET}
@@ -254,6 +379,11 @@ The test suite covers:
 - User management
 - Role-based authorization
 - Last administrator protection
+- Personal medication CRUD operations
+- Medication ownership validation
+- Medication status management
+- Pagination and sorting
+- Medication status filtering
 - Exception handling
 
 ## Security
@@ -266,7 +396,9 @@ The application implements several security measures:
 - Role-based access control
 - Stateless session management
 - Protected API endpoints
+- User ownership validation
 - Secure handling of application secrets
+- Database-level cascading deletion for personal medications
 
 ## Future Improvements
 
@@ -275,8 +407,10 @@ The application implements several security measures:
 - Refresh token mechanism
 - Login rate limiting
 - Audit logging
-- Medication management
-- Medication schedules and reminders
+- Medication catalog
+- Medication scheduling
+- Medication intake tracking
+- Medication reminders and notifications
 - Prescription management
 
 ## License
