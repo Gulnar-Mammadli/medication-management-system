@@ -1,5 +1,6 @@
 package com.medication.management.common.exception;
 
+import com.medication.management.medication.exception.MedicationNotFoundException;
 import com.medication.management.user.exception.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -70,6 +71,22 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .badRequest()
+                .body(error);
+    }
+
+    @ExceptionHandler(MedicationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMedicationNotFound(
+            MedicationNotFoundException exception
+    ) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                exception.getMessage(),
+                Instant.now(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
                 .body(error);
     }
 
