@@ -4,6 +4,7 @@ import com.medication.management.auth.dto.request.LoginRequestDto;
 import com.medication.management.auth.dto.response.LoginResponseDto;
 import com.medication.management.auth.jwt.JwtService;
 import com.medication.management.auth.service.AuthService;
+import com.medication.management.auth.service.TokenRevocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +21,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final TokenRevocationService tokenRevocationService;
 
     @Value("${jwt.expiration}")
     private long expiration;
@@ -54,5 +56,10 @@ public class AuthServiceImpl implements AuthService {
                 "Bearer",
                 expiration
         );
+    }
+
+    @Override
+    public void logout(String token) {
+        tokenRevocationService.revokeToken(token);
     }
 }

@@ -8,5 +8,6 @@ public record UserResponseDto(UUID id,
                               String firstName,
                               String lastName,
                               String timezone,
-                              Instant createdAt) {
+                              Instant createdAt,
+                              Instant updatedAt) {
 }

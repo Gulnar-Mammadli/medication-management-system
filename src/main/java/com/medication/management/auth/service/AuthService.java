@@ -5,4 +5,5 @@ import com.medication.management.auth.dto.response.LoginResponseDto;
 
 public interface AuthService {
     LoginResponseDto login(LoginRequestDto request);
+    void logout(String token);
 }

@@ -1,6 +1,8 @@
 package com.medication.management.user.controller;
 
 import com.medication.management.auth.security.CustomUserDetails;
+import com.medication.management.user.dto.request.ChangePasswordRequestDto;
+import com.medication.management.user.dto.request.UpdateUserRequestDto;
 import com.medication.management.user.dto.request.UserRequestDto;
 import com.medication.management.user.dto.response.UserResponseDto;
 import com.medication.management.user.service.UserService;
@@ -38,5 +40,27 @@ public class UserController {
         return ResponseEntity.ok(
                 userService.getCurrentUser(userDetails.id())
         );
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<UserResponseDto> updateCurrentUser(
+            @Valid @RequestBody UpdateUserRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+                userService.updateCurrentUser(
+                        userDetails.id(),
+                        request
+                )
+        );
+    }
+
+    @PatchMapping("/me/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changePassword(
+            @Valid @RequestBody ChangePasswordRequestDto request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        userService.changePassword(userDetails.id(), request);
     }
 }

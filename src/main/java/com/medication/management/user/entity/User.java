@@ -35,6 +35,10 @@ public class User {
     @Column(nullable = false, length = 64)
     private String timezone = "UTC";
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private UserRole role = UserRole.ROLE_USER;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

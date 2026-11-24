@@ -1,5 +1,9 @@
+
 package com.medication.management.user.controller;
 
+import com.medication.management.auth.jwt.JwtService;
+import com.medication.management.auth.service.CustomUserDetailsService;
+import com.medication.management.auth.service.TokenRevocationService;
 import com.medication.management.common.exception.GlobalExceptionHandler;
 import com.medication.management.config.SecurityConfig;
 import com.medication.management.user.dto.request.UserRequestDto;
@@ -39,6 +43,15 @@ class UserControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService userDetailsService;
+
+    @MockitoBean
+    private TokenRevocationService tokenRevocationService;
+
     @Test
     void register_shouldReturn201WhenSuccessful() throws Exception {
 
@@ -56,6 +69,7 @@ class UserControllerTest {
                 "John",
                 "Smith",
                 "Europe/Tallinn",
+                Instant.now(),
                 Instant.now()
         );
 

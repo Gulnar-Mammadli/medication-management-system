@@ -1,6 +1,7 @@
 package com.medication.management.auth.jwt;
 
 import com.medication.management.auth.service.CustomUserDetailsService;
+import com.medication.management.auth.service.TokenRevocationService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final TokenRevocationService tokenRevocationService;
 
     @Override
     protected void doFilterInternal(
@@ -40,15 +42,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String token = authHeader.substring(7);
+
+            if (tokenRevocationService.isRevoked(token)) {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             String email = jwtService.extractUsername(token);
 
             if (email != null &&
                     SecurityContextHolder.getContext().getAuthentication() == null) {
+
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(email);
-                boolean valid = jwtService.isTokenValid(token, userDetails);
-                if (valid) {
 
+                boolean valid = jwtService.isTokenValid(token, userDetails);
+
+                if (valid) {
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,

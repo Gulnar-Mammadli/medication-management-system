@@ -21,8 +21,15 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        return ResponseEntity.ok("Authentication successful!");
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @RequestHeader("Authorization") String authorization
+    ) {
+
+        String token = authorization.substring(7);
+
+        authService.logout(token);
+
+        return ResponseEntity.noContent().build();
     }
 }
